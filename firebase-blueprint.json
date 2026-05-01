@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Construction Project",
+      "description": "A completed or ongoing construction project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["Residential", "Commercial", "Renovation"] },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "imageUrl", "createdAt"]
+    },
+    "Service": {
+      "title": "Construction Service",
+      "description": "Services offered by the company.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "iconName": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["title", "description", "iconName", "order"]
+    },
+    "PricingPlan": {
+      "title": "Pricing Plan",
+      "description": "Available service packages.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "type": { "type": "string", "enum": ["basic", "standard", "premium"] },
+        "ctaText": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "price", "features", "type", "order"]
+    },
+    "FAQ": {
+      "title": "Frequently Asked Question",
+      "description": "Common queries and their answers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["question", "answer", "order"]
+    },
+    "BlogPost": {
+      "title": "Blog Post",
+      "description": "Industry news and tips.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "excerpt", "content", "imageUrl", "date", "createdAt"]
+    },
+    "Inquiry": {
+      "title": "Project Inquiry",
+      "description": "User submitted contact form.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "projectType": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "contacted", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "projects": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Collection of construction projects."
+    },
+    "services": {
+      "schema": { "$ref": "#/entities/Service" },
+      "description": "Collection of services offered."
+    },
+    "pricingPlans": {
+      "schema": { "$ref": "#/entities/PricingPlan" },
+      "description": "Collection of pricing plans."
+    },
+    "faqs": {
+      "schema": { "$ref": "#/entities/FAQ" },
+      "description": "Collection of FAQs."
+    },
+    "blogs": {
+      "schema": { "$ref": "#/entities/BlogPost" },
+      "description": "Collection of blog posts."
+    },
+    "inquiries": {
+      "schema": { "$ref": "#/entities/Inquiry" },
+      "description": "Collection of user inquiries."
+    }
+  }
+}

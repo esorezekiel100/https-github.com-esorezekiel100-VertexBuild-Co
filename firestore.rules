@@ -1,0 +1,148 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Helpers ---
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['title', 'category', 'description', 'imageUrl', 'createdAt']) &&
+             data.keys().size() == 5 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.category in ['Residential', 'Commercial', 'Renovation'] &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.imageUrl is string && data.imageUrl.size() <= 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidService(data) {
+      return data.keys().hasAll(['title', 'description', 'iconName', 'order']) &&
+             data.keys().size() == 4 &&
+             data.title is string && data.title.size() <= 100 &&
+             data.description is string && data.description.size() <= 500 &&
+             data.iconName is string && data.iconName.size() <= 50 &&
+             data.order is number;
+    }
+
+    function isValidPricingPlan(data) {
+      return data.keys().hasAll(['name', 'price', 'features', 'type', 'ctaText', 'order']) &&
+             data.keys().size() == 6 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.price is string && data.price.size() <= 50 &&
+             data.features is list && data.features.size() <= 20 &&
+             data.type in ['basic', 'standard', 'premium'] &&
+             data.ctaText is string && data.ctaText.size() <= 50 &&
+             data.order is number;
+    }
+
+    function isValidFAQ(data) {
+      return data.keys().hasAll(['question', 'answer', 'order']) &&
+             data.keys().size() == 3 &&
+             data.question is string && data.question.size() <= 300 &&
+             data.answer is string && data.answer.size() <= 2000 &&
+             data.order is number;
+    }
+
+    function isValidBlog(data) {
+      return data.keys().hasAll(['title', 'excerpt', 'content', 'imageUrl', 'date', 'createdAt']) &&
+             data.keys().size() == 6 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.excerpt is string && data.excerpt.size() <= 500 &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.imageUrl is string && data.imageUrl.size() <= 1000 &&
+             data.date is string &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidInquiry(data) {
+      return data.keys().hasAll(['name', 'email', 'phone', 'projectType', 'message', 'status', 'createdAt']) &&
+             data.keys().size() == 7 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 100 &&
+             data.phone is string && data.phone.size() <= 50 &&
+             data.projectType is string && data.projectType.size() <= 100 &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.status in ['new', 'contacted', 'closed'] &&
+             data.createdAt is timestamp;
+    }
+
+    // --- Collections ---
+
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.token.email == 'esorezekiel100@gmail.com' && request.auth.token.email_verified == true && adminId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProject(incoming());
+      allow update: if isAdmin() && isValidProject(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidService(incoming());
+      allow update: if isAdmin() && isValidService(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /pricingPlans/{planId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidPricingPlan(incoming());
+      allow update: if isAdmin() && isValidPricingPlan(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /faqs/{faqId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidFAQ(incoming());
+      allow update: if isAdmin() && isValidFAQ(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidBlog(incoming());
+      allow update: if isAdmin() && isValidBlog(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /inquiries/{inquiryId} {
+      allow read: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidInquiry(incoming()) && incoming().createdAt == request.time && incoming().status == 'new';
+      allow update: if isAdmin() && isValidInquiry(incoming());
+      allow delete: if isAdmin();
+    }
+  }
+}
